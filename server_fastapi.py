@@ -39,6 +39,9 @@ from style_bert_vits2.nlp.japanese import pyopenjtalk_worker as pyopenjtalk
 from style_bert_vits2.nlp.japanese.user_dict import update_dict
 from style_bert_vits2.tts_model import TTSModel, TTSModelHolder
 
+import nest_asyncio
+from pyngrok import ngrok
+from google.colab import userdata
 
 ln = config.server_config.language
 
@@ -305,6 +308,19 @@ if __name__ == "__main__":
 
     logger.info(f"server listen: http://127.0.0.1:{config.server_config.port}")
     logger.info(f"API docs: http://127.0.0.1:{config.server_config.port}/docs")
+    
+    #ngrok
+    ngrok_auth_token = os.environ.get("NGROK_AUTH_TOKEN")
+
+    if ngrok_auth_token:
+        ngrok.set_auth_token(ngrok_auth_token)
+    else:
+        logger.warning("NGROK_AUTH_TOKEN environment variable not set. ngrok may not work properly.")
+
+    ngrok_tunnel = ngrok.connect(config.server_config.port)
+    print('PUBLIC_URL:',ngrok_tunnel.public_url)
+    nest_asyncio.apply()
+    
     uvicorn.run(
         app, port=config.server_config.port, host="0.0.0.0", log_level="warning"
     )
